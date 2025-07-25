@@ -25,10 +25,6 @@ logger = setup_logger(__name__)
 def collect_data():
     """Collect data from web scraping and PDF extraction."""
     logger.info("Starting data collection")
-
-    # Get configuration
-    config = get_config()
-
     # URLs for EV charging station data
     urls = [
         "https://afdc.energy.gov/stations",

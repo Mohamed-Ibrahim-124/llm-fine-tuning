@@ -4,6 +4,7 @@ Local test script for the LLM Fine-tuning Pipeline.
 This script tests the pipeline components without requiring actual model training.
 """
 
+import json
 import os
 import sys
 from pathlib import Path
@@ -72,8 +73,7 @@ def test_pipeline_components():
     # Simulate some metrics
     system_metrics = monitor.get_system_metrics()
     monitor.record_metrics(150.0, 8.0, system_metrics)
-    print(f"   ✅ Recorded performance metrics")
-
+    print("   ✅ Recorded performance metrics")
     # Test 6: API Server
     print("\n6. Testing API Server...")
     client = TestClient(app)
@@ -91,8 +91,6 @@ def test_pipeline_components():
     os.makedirs("logs", exist_ok=True)
 
     # Save benchmark data
-    import json
-
     with open("logs/test_benchmark.json", "w") as f:
         json.dump(benchmark_data[:5], f, indent=2)  # Save first 5 questions
 
@@ -110,8 +108,7 @@ def test_pipeline_components():
     print(f"   - Data collected: {len(web_data)} items")
     print(f"   - Data processed: {len(augmented_data)} Q&A pairs")
     print(f"   - Benchmark questions: {len(benchmark_data)}")
-    print(f"   - API endpoint: ✅ Working")
-
+    print("   - API endpoint: ✅ Working")
     return True
 
 

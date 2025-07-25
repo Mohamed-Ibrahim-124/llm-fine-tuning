@@ -6,11 +6,10 @@ This script allows testing and debugging of specific pipeline components
 without running the entire pipeline.
 """
 
-import os
 import sys
 from pathlib import Path
 
-# Add the src directory to the Python path
+# Add src to path
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
 from llm_fine_tuning.config.settings import get_config
@@ -20,6 +19,9 @@ from llm_fine_tuning.data.processing.augmenter import augment_data
 from llm_fine_tuning.data.processing.cleaner import clean_data
 from llm_fine_tuning.data.processing.splitter import split_data
 from llm_fine_tuning.data.processing.tokenizer import tokenize_data
+from llm_fine_tuning.evaluation.benchmark_generator import create_benchmark_dataset
+from llm_fine_tuning.evaluation.performance_monitor import create_performance_monitor
+from llm_fine_tuning.models.fine_tuner import fine_tune_model
 from llm_fine_tuning.utils.logger import setup_logger
 
 logger = setup_logger(__name__)
@@ -69,12 +71,12 @@ def test_tokenization(train_df):
     model_name = config.model.name
 
     try:
-        tokenized_data = tokenize_data(train_df, model_name)
+        tokenize_data(train_df, model_name)
         logger.info("Tokenization test: Success")
-        return tokenized_data
+        return True
     except Exception as e:
         logger.error(f"Tokenization test failed: {str(e)}")
-        return None
+        return False
 
 
 def main():
@@ -89,8 +91,7 @@ def main():
         train_df, val_df = test_data_processing(data)
 
         # Test tokenization
-        tokenized_data = test_tokenization(train_df)
-
+        test_tokenization(train_df)
         logger.info("All component tests completed")
 
         return 0

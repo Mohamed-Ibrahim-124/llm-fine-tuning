@@ -11,9 +11,9 @@ from .processing.tokenizer import tokenize_data
 
 __all__ = [
     "scrape_web",
-    "extract_pdf", 
+    "extract_pdf",
     "clean_data",
     "augment_data",
     "split_data",
-    "tokenize_data"
-] 
+    "tokenize_data",
+]

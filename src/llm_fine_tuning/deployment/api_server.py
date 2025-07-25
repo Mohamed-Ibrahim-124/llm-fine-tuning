@@ -13,6 +13,7 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 # Simple token validation (replace with proper auth in production)
 VALID_TOKEN = "your-secret-token"
 
+
 @app.post("/predict")
 async def predict(input_text: str, token: str = Depends(oauth2_scheme)):
     logger.info("Received API request")
@@ -23,6 +24,7 @@ async def predict(input_text: str, token: str = Depends(oauth2_scheme)):
     response = "Model output"
     logger.info("Request processed successfully")
     return {"response": response}
+
 
 @step
 def deploy_model(model):

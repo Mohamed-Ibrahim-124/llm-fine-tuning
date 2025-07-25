@@ -18,7 +18,9 @@ requirements_path = Path(__file__).parent / "requirements.txt"
 install_requires = []
 if requirements_path.exists():
     with open(requirements_path, "r", encoding="utf-8") as f:
-        install_requires = [line.strip() for line in f if line.strip() and not line.startswith("#")]
+        install_requires = [
+            line.strip() for line in f if line.strip() and not line.startswith("#")
+        ]
 
 setup(
     name="llm-fine-tuning",
@@ -62,4 +64,4 @@ setup(
     },
     include_package_data=True,
     zip_safe=False,
-) 
+)

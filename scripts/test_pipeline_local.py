@@ -27,77 +27,80 @@ def test_pipeline_components():
     """Test all pipeline components locally."""
     print("🚀 Testing LLM Fine-tuning Pipeline Components")
     print("=" * 50)
-    
+
     # Test 1: Configuration
     print("\n1. Testing Configuration...")
     config = get_config()
     print(f"   ✅ Model: {config.model.name}")
     print(f"   ✅ Domain: {config.domain.target}")
     print(f"   ✅ Training epochs: {config.training.num_epochs}")
-    
+
     # Test 2: Data Collection
     print("\n2. Testing Data Collection...")
     urls = ["https://afdc.energy.gov/stations"]
     web_data = scrape_web(urls)
     print(f"   ✅ Collected {len(web_data)} web data items")
-    
+
     # Test 3: Data Processing
     print("\n3. Testing Data Processing...")
     cleaned_data = clean_data(web_data)
     print(f"   ✅ Cleaned {len(cleaned_data)} data items")
-    
+
     augmented_data = augment_data(cleaned_data)
     print(f"   ✅ Augmented to {len(augmented_data)} Q&A pairs")
-    
+
     # Only split if we have enough data
     if len(augmented_data) > 1:
         train_data, val_data = split_data(augmented_data)
         print(f"   ✅ Split data: train={len(train_data)}, val={len(val_data)}")
     else:
-        print(f"   ✅ Skipped splitting (insufficient data: {len(augmented_data)} items)")
+        print(
+            f"   ✅ Skipped splitting (insufficient data: {len(augmented_data)} items)"
+        )
         train_data, val_data = augmented_data, []
-    
+
     # Test 4: Benchmark Generation
     print("\n4. Testing Benchmark Generation...")
     benchmark_data = create_benchmark_dataset()
     print(f"   ✅ Generated {len(benchmark_data)} benchmark questions")
-    
+
     # Test 5: Performance Monitoring
     print("\n5. Testing Performance Monitoring...")
     monitor = create_performance_monitor()
     monitor.start_monitoring()
-    
+
     # Simulate some metrics
     system_metrics = monitor.get_system_metrics()
     monitor.record_metrics(150.0, 8.0, system_metrics)
     print(f"   ✅ Recorded performance metrics")
-    
+
     # Test 6: API Server
     print("\n6. Testing API Server...")
     client = TestClient(app)
-    
+
     # Test API endpoint
     response = client.post(
-        '/predict', 
-        json={'input_text': 'What is EV charging?'}, 
-        headers={'Authorization': 'Bearer your-secret-token'}
+        "/predict",
+        json={"input_text": "What is EV charging?"},
+        headers={"Authorization": "Bearer your-secret-token"},
     )
     print(f"   ✅ API endpoint test: {response.status_code}")
-    
+
     # Test 7: Save test results
     print("\n7. Saving Test Results...")
     os.makedirs("logs", exist_ok=True)
-    
+
     # Save benchmark data
     import json
+
     with open("logs/test_benchmark.json", "w") as f:
         json.dump(benchmark_data[:5], f, indent=2)  # Save first 5 questions
-    
+
     # Save performance metrics
     monitor.save_metrics("logs/test_performance.json")
-    
+
     print("   ✅ Test results saved to logs/")
-    
+
     print("\n" + "=" * 50)
     print("🎉 All pipeline components tested successfully!")
     print("\n📁 Generated files:")
@@ -108,12 +111,13 @@ def test_pipeline_components():
     print(f"   - Data processed: {len(augmented_data)} Q&A pairs")
     print(f"   - Benchmark questions: {len(benchmark_data)}")
     print(f"   - API endpoint: ✅ Working")
-    
+
     return True
+
 
 if __name__ == "__main__":
     try:
         test_pipeline_components()
     except Exception as e:
         print(f"\n❌ Test failed: {e}")
-        sys.exit(1) 
+        sys.exit(1)

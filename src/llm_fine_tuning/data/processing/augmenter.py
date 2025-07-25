@@ -6,7 +6,7 @@ question-answer pairs from collected text content.
 """
 
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Dict
 
 import pandas as pd
 
@@ -21,23 +21,26 @@ class DataAugmenter:
     def __init__(self, domain_prompts: Dict[str, str] = None):
         """
         Initialize the data augmenter.
-        
+
         Args:
             domain_prompts: Dictionary of domain-specific prompts for augmentation
         """
         self.domain_prompts = domain_prompts or {
-            "qa_generation": "Generate a question-answer pair about electric vehicle charging stations based on this text: {text}",
+            "qa_generation": (
+                "Generate a question-answer pair about electric vehicle charging "
+                "stations based on this text: {text}"
+            ),
             "summarization": "Summarize this information about EV charging: {text}",
-            "classification": "Classify this EV charging information into categories: {text}"
+            "classification": "Classify this EV charging information into categories: {text}",
         }
 
     def generate_qa_pair(self, text: str) -> Dict[str, str]:
         """
         Generate a question-answer pair from text.
-        
+
         Args:
             text: Input text to generate Q&A from
-            
+
         Returns:
             Dictionary containing question and answer
         """
@@ -45,21 +48,15 @@ class DataAugmenter:
         # In a real implementation, you would use an LLM API here
 
         # Split text into sentences
-        sentences = text.split('.')
+        sentences = text.split(".")
         if not sentences or len(sentences[0].strip()) < 10:
-            return {
-                "question": "What is this text about?",
-                "answer": text
-            }
+            return {"question": "What is this text about?", "answer": text}
 
         # Use first sentence to generate a question
         first_sentence = sentences[0].strip()
         question = f"What is {first_sentence.lower()}?"
 
-        return {
-            "question": question,
-            "answer": text
-        }
+        return {"question": question, "answer": text}
 
     def augment_data(self, df, output_path: str = None):
         """
@@ -105,7 +102,9 @@ class DataAugmenter:
             augmented_df.to_csv(output_path, index=False)
             logger.info(f"Augmented data saved to: {output_path}")
 
-        logger.info(f"Data augmentation completed: {len(augmented_df)} Q&A pairs generated")
+        logger.info(
+            f"Data augmentation completed: {len(augmented_df)} Q&A pairs generated"
+        )
 
         return augmented_df
 
@@ -113,13 +112,13 @@ class DataAugmenter:
 def augment_data(df: pd.DataFrame, output_path: str = None) -> pd.DataFrame:
     """
     Augment data by generating Q&A pairs.
-    
+
     Args:
         df: DataFrame containing cleaned text data
         output_path: Optional path to save augmented data
-        
+
     Returns:
         Augmented DataFrame with Q&A pairs
     """
     augmenter = DataAugmenter()
-    return augmenter.augment_data(df, output_path) 
+    return augmenter.augment_data(df, output_path)

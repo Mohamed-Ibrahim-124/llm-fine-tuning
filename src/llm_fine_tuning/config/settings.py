@@ -76,7 +76,7 @@ class Config:
 def _setup_environment():
     """Set up environment variables with defaults."""
     # Model Configuration
-    os.environ.setdefault("MODEL_NAME", "meta-llama/Llama-3-7B")
+    os.environ.setdefault("MODEL_NAME", "microsoft/DialoGPT-medium")
     os.environ.setdefault("BASE_MODEL_PATH", "./models/base")
     os.environ.setdefault("FINE_TUNED_MODEL_PATH", "./models/fine_tuned")
 

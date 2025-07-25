@@ -40,6 +40,7 @@ wandb
 tensorboard
 # API testing
 httpx
+fastapi[all]
 # Data validation
 great-expectations
 # Model optimization

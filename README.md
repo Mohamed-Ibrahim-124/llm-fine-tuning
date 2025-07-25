@@ -76,6 +76,9 @@ mkdir -p data/{raw,processed,training,evaluation} logs models
 
 ### Run the Pipeline
 ```bash
+# Test pipeline components locally (recommended first)
+python scripts/test_pipeline_local.py
+
 # Execute the complete pipeline
 python scripts/run_pipeline.py
 

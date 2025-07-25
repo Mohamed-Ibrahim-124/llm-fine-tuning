@@ -74,21 +74,23 @@ class TestDataProcessing:
 
 class TestBenchmarkGenerator:
     """Test benchmark generation components."""
-    
+
     def test_benchmark_generator_creation(self):
         """Test benchmark generator initialization."""
         generator = BenchmarkGenerator()
-        
+
         assert generator.categories == ["charging_speed", "connector_types", "installation", "pricing", "availability"]
         assert generator.difficulty_levels == ["easy", "medium", "hard"]
         assert generator.num_questions == 100
-    
+
     def test_question_generation(self):
         """Test question generation for different categories."""
         generator = BenchmarkGenerator()
-        
-        question_data = generator._generate_question("charging_speed", "easy")
-        
+
+        question_data = generator._generate_question(
+            "charging_speed", "easy", "test_001"
+        )
+
         assert "id" in question_data
         assert "category" in question_data
         assert "difficulty" in question_data
@@ -96,19 +98,21 @@ class TestBenchmarkGenerator:
         assert "expected_answer" in question_data
         assert question_data["category"] == "charging_speed"
         assert question_data["difficulty"] == "easy"
-    
+
     def test_benchmark_dataset_creation(self):
         """Test full benchmark dataset creation."""
         # Create a smaller dataset for testing
-        with patch('benchmark_generator.BENCHMARK_CONFIG') as mock_config:
+        with patch(
+            "llm_fine_tuning.evaluation.benchmark_generator.BENCHMARK_CONFIG"
+        ) as mock_config:
             mock_config.__getitem__.side_effect = lambda x: {
                 "num_questions": 10,
                 "categories": ["charging_speed"],
                 "difficulty_levels": ["easy"]
             }.get(x)
-            
+
             benchmark_data = create_benchmark_dataset()
-            
+
             assert len(benchmark_data) > 0
             assert all("question" in item for item in benchmark_data)
             assert all("expected_answer" in item for item in benchmark_data)
@@ -167,37 +171,37 @@ class TestPerformanceMonitoring:
 
 class TestConfiguration:
     """Test configuration management."""
-    
+
     def test_config_structure(self):
         """Test configuration structure and values."""
         config = get_config()
-        
+
         assert hasattr(config, 'model')
         assert hasattr(config, 'data')
         assert hasattr(config, 'api')
         assert hasattr(config, 'training')
         assert hasattr(config, 'evaluation')
         assert hasattr(config, 'domain')
-    
+
     def test_model_config(self):
         """Test model configuration values."""
         config = get_config()
-        
-        assert config.model.name == "meta-llama/Llama-3-7B"
+
+        assert config.model.name == "microsoft/DialoGPT-medium"
         assert hasattr(config.model, 'base_path')
         assert hasattr(config.model, 'fine_tuned_path')
-    
+
     def test_training_config(self):
         """Test training configuration values."""
         config = get_config()
-        
-        assert config["training"]["batch_size"] == 1
-        assert config["training"]["num_epochs"] == 3
-        assert config["training"]["learning_rate"] == 2e-4
+
+        assert config.training.batch_size == 1
+        assert config.training.num_epochs == 3
+        assert config.training.learning_rate == 2e-4
 
 class TestIntegration:
     """Integration tests for pipeline components."""
-    
+
     def test_end_to_end_data_processing(self):
         """Test complete data processing pipeline."""
         # Test data
@@ -206,44 +210,45 @@ class TestIntegration:
             {"text": "DC fast chargers can add 60-80 miles in 20 minutes.", "source": "test2"},
             {"text": "Level 2 chargers provide 3-19 kW power.", "source": "test1"},  # Duplicate
         ]
-        
+
         # Clean data
         cleaned = clean_data(test_data)
         assert len(cleaned) == 2
-        
+
         # Augment data
         augmented = augment_data(cleaned)
         assert len(augmented) == 2
         assert "question" in augmented.columns
-        
+
         # Split data
         train_data, val_data = split_data(augmented)
         assert len(train_data) + len(val_data) == 2
-    
+
     def test_benchmark_and_monitoring_integration(self):
         """Test integration between benchmark generation and performance monitoring."""
         # Create benchmark
         generator = BenchmarkGenerator()
         benchmark_data = generator.generate_benchmark_dataset()
-        
+
         # Create performance monitor
         monitor = create_performance_monitor()
         monitor.start_monitoring()
-        
+
         # Simulate some performance metrics
         system_metrics = monitor.get_system_metrics()
         monitor.record_metrics(150.0, 8.0, system_metrics)
-        
+
         # Verify both components work together
         assert len(benchmark_data) > 0
         assert len(monitor.metrics_history) == 1
-        
+
         # Test saving metrics
-        monitor.save_metrics("test_performance_metrics.json")
-        assert os.path.exists("test_performance_metrics.json")
-        
+        monitor.save_metrics("logs/test_performance_metrics.json")
+        assert os.path.exists("logs/test_performance_metrics.json")
+
         # Cleanup
-        os.remove("test_performance_metrics.json")
+        if os.path.exists("logs/test_performance_metrics.json"):
+            os.remove("logs/test_performance_metrics.json")
 
 if __name__ == "__main__":
     pytest.main([__file__]) 

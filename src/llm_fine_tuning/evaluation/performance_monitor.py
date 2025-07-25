@@ -46,17 +46,11 @@ class PerformanceMonitor:
         # Perform inference
         with torch.no_grad():
             if hasattr(model, "generate"):
-                # For transformer models
-                outputs = model.generate(
-                    input_text,
-                    max_length=max_length,
-                    num_return_sequences=1,
-                    do_sample=False,
-                )
+                # For Hugging Face models
+                model.generate(input_text, max_length=max_length)
             else:
                 # For pipeline models
-                outputs = model(input_text, max_length=max_length)
-
+                model(input_text, max_length=max_length)
         end_time = time.time()
         latency_ms = (end_time - start_time) * 1000
 

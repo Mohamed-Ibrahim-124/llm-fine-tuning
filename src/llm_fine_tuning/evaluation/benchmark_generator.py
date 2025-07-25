@@ -165,18 +165,42 @@ class BenchmarkGenerator:
         answer_templates = {
             "charging_speed": {
                 "easy": "Level 2 chargers typically provide 3-19 kW of power, adding 10-60 miles of range per hour.",
-                "medium": "Charging speed depends on charger power, battery capacity, temperature, and vehicle acceptance rate.",
-                "hard": "Charging protocols, battery chemistry, thermal management, and grid capacity all influence charging speed.",
+                "medium": (
+                    "Charging speed depends on charger power, battery capacity, "
+                    "temperature, and vehicle acceptance rate."
+                ),
+                "hard": (
+                    "Charging protocols, battery chemistry, thermal management, "
+                    "and grid capacity all influence charging speed."
+                ),
             },
             "connector_types": {
-                "easy": "Main types include Type 1 (J1772), Type 2 (Mennekes), CCS, CHAdeMO, and Tesla's proprietary connector.",
-                "medium": "CCS combines AC and DC charging in one connector, while CHAdeMO is DC-only. Regional standards vary.",
-                "hard": "Connector evolution is driven by power requirements, safety standards, and industry collaboration.",
+                "easy": (
+                    "Main types include Type 1 (J1772), Type 2 (Mennekes), CCS, "
+                    "CHAdeMO, and Tesla's proprietary connector."
+                ),
+                "medium": (
+                    "CCS combines AC and DC charging in one connector, while "
+                    "CHAdeMO is DC-only. Regional standards vary."
+                ),
+                "hard": (
+                    "Connector evolution is driven by power requirements, "
+                    "safety standards, and industry collaboration."
+                ),
             },
             "installation": {
-                "easy": "Home installation requires a 240V circuit, proper wiring, and often a permit. Costs range from $500-2000.",
-                "medium": "Commercial installations require permits, load calculations, and compliance with electrical codes.",
-                "hard": "Fleet installations require load management, grid capacity analysis, and scalable infrastructure design.",
+                "easy": (
+                    "Home installation requires a 240V circuit, proper wiring, "
+                    "and often a permit. Costs range from $500-2000."
+                ),
+                "medium": (
+                    "Commercial installations require permits, load calculations, "
+                    "and compliance with electrical codes."
+                ),
+                "hard": (
+                    "Fleet installations require load management, grid capacity "
+                    "analysis, and scalable infrastructure design."
+                ),
             },
             "pricing": {
                 "easy": "Home charging costs $0.10-0.15/kWh, while public charging varies from $0.20-0.60/kWh.",

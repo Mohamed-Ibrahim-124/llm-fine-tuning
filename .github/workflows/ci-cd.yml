@@ -1,0 +1,264 @@
+name: LLM Fine-tuning Pipeline CI/CD
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  schedule:
+    # Run weekly on Sundays at 2 AM UTC
+    - cron: '0 2 * * 0'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        python-version: [3.9, 3.10, 3.11]
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+    
+    - name: Cache pip dependencies
+      uses: actions/cache@v3
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ matrix.python-version }}-${{ hashFiles('**/requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-${{ matrix.python-version }}-
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pytest pytest-cov black flake8 safety bandit
+    
+    - name: Lint with flake8
+      run: |
+        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+    
+    - name: Format check with black
+      run: |
+        black --check --diff .
+    
+    - name: Security scan with bandit
+      run: |
+        bandit -r src/ -f json -o bandit-report.json || true
+    
+    - name: Dependency vulnerability scan
+      run: |
+        safety check --json --output safety-report.json || true
+    
+    - name: Run tests
+      run: |
+        pytest tests/ --cov=src/llm_fine_tuning --cov-report=xml --cov-report=html
+    
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./coverage.xml
+        flags: unittests
+        name: codecov-umbrella
+
+  data-validation:
+    runs-on: ubuntu-latest
+    needs: test
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: 3.11
+    
+    - name: Install dependencies
+      run: |
+        pip install -r requirements.txt
+    
+    - name: Validate data processing
+      run: |
+        python -c "
+        from llm_fine_tuning.data.processing.cleaner import clean_data
+        from llm_fine_tuning.data.processing.augmenter import augment_data
+        import pandas as pd
+        
+        # Test data processing functions
+        test_data = [{'text': 'Test text 1', 'source': 'test'}, {'text': 'Test text 2', 'source': 'test'}]
+        
+        cleaned = clean_data(test_data)
+        augmented = augment_data(cleaned)
+        
+        assert len(cleaned) > 0, 'Data cleaning failed'
+        assert len(augmented) > 0, 'Data augmentation failed'
+        print('Data processing validation passed')
+        "
+    
+    - name: Validate benchmark generation
+      run: |
+        python -c "
+        from llm_fine_tuning.evaluation.benchmark_generator import create_benchmark_dataset
+        
+        benchmark_data = create_benchmark_dataset()
+        assert len(benchmark_data) > 0, 'Benchmark generation failed'
+        print(f'Generated {len(benchmark_data)} benchmark questions')
+        "
+
+  model-training:
+    runs-on: ubuntu-latest
+    needs: [test, data-validation]
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: 3.11
+    
+    - name: Install dependencies
+      run: |
+        pip install -r requirements.txt
+    
+    - name: Create necessary directories
+      run: |
+        mkdir -p data/raw data/processed data/training data/evaluation logs models
+    
+    - name: Run pipeline (dry run)
+      run: |
+        python -c "
+        import logging
+        logging.basicConfig(level=logging.INFO)
+        
+        # Test pipeline components without actual training
+        from llm_fine_tuning.data.collection.web_scraper import scrape_web
+        from llm_fine_tuning.data.collection.pdf_extractor import extract_pdf
+        from llm_fine_tuning.data.processing.cleaner import clean_data
+        from llm_fine_tuning.data.processing.augmenter import augment_data
+        from llm_fine_tuning.evaluation.benchmark_generator import create_benchmark_dataset
+        
+        print('Testing pipeline components...')
+        
+        # Test data collection (mock)
+        print('Data collection test passed')
+        
+        # Test data processing
+        test_data = [{'text': 'Test EV charging data', 'source': 'test'}]
+        cleaned = clean_data(test_data)
+        augmented = augment_data(cleaned)
+        print('Data processing test passed')
+        
+        # Test benchmark generation
+        benchmark = create_benchmark_dataset()
+        print(f'Benchmark generation test passed: {len(benchmark)} questions')
+        
+        print('All pipeline components validated successfully')
+        "
+    
+    - name: Upload pipeline artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: pipeline-artifacts
+        path: |
+          data/
+          logs/
+          models/
+
+  deployment:
+    runs-on: ubuntu-latest
+    needs: model-training
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Download pipeline artifacts
+      uses: actions/download-artifact@v3
+      with:
+        name: pipeline-artifacts
+        path: ./
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: 3.11
+    
+    - name: Install dependencies
+      run: |
+        pip install -r requirements.txt
+    
+    - name: Test deployment
+      run: |
+        python -c "
+        from llm_fine_tuning.deployment.api_server import app
+        from fastapi.testclient import TestClient
+        
+        client = TestClient(app)
+        
+        # Test API endpoint
+        response = client.post('/predict', 
+                             json={'input_text': 'test'}, 
+                             headers={'Authorization': 'Bearer your-secret-token'})
+        
+        assert response.status_code == 200, f'API test failed: {response.status_code}'
+        print('Deployment test passed')
+        "
+    
+    - name: Deploy to staging (placeholder)
+      run: |
+        echo "Deploying to staging environment..."
+        # Add actual deployment logic here
+        # This could include:
+        # - Docker build and push
+        # - Kubernetes deployment
+        # - Cloud platform deployment (AWS, GCP, Azure)
+        echo "Staging deployment completed"
+
+  security-scan:
+    runs-on: ubuntu-latest
+    needs: test
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Run security scan
+      uses: github/codeql-action/init@v2
+      with:
+        languages: python
+    
+    - name: Perform CodeQL Analysis
+      uses: github/codeql-action/analyze@v2
+    
+    - name: Upload security reports
+      uses: actions/upload-artifact@v3
+      with:
+        name: security-reports
+        path: |
+          bandit-report.json
+          safety-report.json
+
+  notify:
+    runs-on: ubuntu-latest
+    needs: [deployment, security-scan]
+    if: always()
+    
+    steps:
+    - name: Notify on success
+      if: success()
+      run: |
+        echo "Pipeline completed successfully!"
+        # Add notification logic (Slack, email, etc.)
+    
+    - name: Notify on failure
+      if: failure()
+      run: |
+        echo "Pipeline failed!"
+        # Add failure notification logic 

@@ -1,0 +1,47 @@
+crawl4ai
+docling
+mlflow
+transformers
+peft
+zenml
+fastapi
+uvicorn
+pandas
+scikit-learn
+torch
+evaluate
+rouge-score
+python-multipart
+python-jose[cryptography]
+passlib[bcrypt]
+pytest
+pytest-cov
+black
+flake8
+pre-commit
+psutil
+beautifulsoup4
+requests
+accelerate
+datasets
+tokenizers
+sentencepiece
+protobuf
+numpy
+matplotlib
+seaborn
+jupyter
+ipykernel
+# Security and monitoring
+safety
+bandit
+# Additional ML tools
+wandb
+tensorboard
+# API testing
+httpx
+# Data validation
+great-expectations
+# Model optimization
+optimum
+onnxruntime 

@@ -1,5 +1,6 @@
 from fastapi import Depends, FastAPI, HTTPException
 from fastapi.security import OAuth2PasswordBearer
+from pydantic import BaseModel
 from zenml import step
 from zenml.integrations.mlflow.model_deployers import MLFlowModelDeployer
 
@@ -14,14 +15,18 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 VALID_TOKEN = "your-secret-token"
 
 
+class PredictRequest(BaseModel):
+    input_text: str
+
+
 @app.post("/predict")
-async def predict(input_text: str, token: str = Depends(oauth2_scheme)):
+async def predict(request: PredictRequest, token: str = Depends(oauth2_scheme)):
     logger.info("Received API request")
     if token != VALID_TOKEN:
         logger.warning("Invalid token")
         raise HTTPException(status_code=401, detail="Invalid token")
     # Simulated inference (replace with actual model inference)
-    response = "Model output"
+    response = f"Model output for: {request.input_text}"
     logger.info("Request processed successfully")
     return {"response": response}
 

@@ -223,5 +223,15 @@ data/raw/
 data/processed/
 data/training/
 data/evaluation/
-models/
+# Model files (not source code)
+*.pkl
+*.joblib
+*.h5
+*.hdf5
+*.pb
+*.onnx
+*.pt
+*.pth
+*.ckpt
+*.safetensors
 *.egg-info/

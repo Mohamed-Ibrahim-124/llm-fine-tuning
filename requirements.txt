@@ -19,7 +19,7 @@ pytest-cov
 black
 flake8
 pre-commit
-psutil
+psutil 
 beautifulsoup4
 requests
 accelerate

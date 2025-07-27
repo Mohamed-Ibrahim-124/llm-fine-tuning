@@ -1,0 +1,34 @@
+version: '3.8'
+
+services:
+  llm-pipeline:
+    build: .
+    container_name: llm-fine-tuning
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+      - ./models:/app/models
+    environment:
+      - PYTHONPATH=/app/src
+      - MODEL_NAME=microsoft/DialoGPT-medium
+      - API_TOKEN=your-secret-token
+    command: python run_pipeline.py
+    restart: unless-stopped
+
+  api-server:
+    build: .
+    container_name: llm-api-server
+    ports:
+      - "8001:8000"
+    volumes:
+      - ./data:/app/data
+      - ./models:/app/models
+    environment:
+      - PYTHONPATH=/app/src
+      - API_TOKEN=your-secret-token
+    command: uvicorn llm_fine_tuning.deployment.api_server:app --host 0.0.0.0 --port 8000
+    depends_on:
+      - llm-pipeline
+    restart: unless-stopped 

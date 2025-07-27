@@ -36,7 +36,7 @@ class WebScraper:
 
     def scrape_url(self, url: str) -> Dict[str, Any]:
         """
-        Scrape content from a single URL.
+        Scrape content from a single URL using crawl4ai.
 
         Args:
             url: URL to scrape
@@ -45,30 +45,55 @@ class WebScraper:
             Dictionary containing scraped content and metadata
         """
         try:
-            logger.info(f"Scraping URL: {url}")
+            logger.info(f"Scraping URL with crawl4ai: {url}")
 
-            response = requests.get(url, headers=self.headers, timeout=self.timeout)
-            response.raise_for_status()
+            # Use crawl4ai for AI-powered web scraping (no API key required)
+            import asyncio
 
-            # Parse HTML content
-            soup = BeautifulSoup(response.content, "html.parser")
+            import crawl4ai
+            from crawl4ai import AsyncWebCrawler
 
-            # Extract text content
-            text_content = soup.get_text(separator=" ", strip=True)
+            # Initialize crawler without API key
+            crawler = AsyncWebCrawler()
 
-            # Clean up text
-            text_content = " ".join(text_content.split())
+            # Perform the crawl using basic extraction
+            async def crawl():
+                result = await crawler.arun(
+                    url=url,
+                    # Use basic extraction without LLM
+                    extraction_strategy="markdown",
+                )
+                return result
 
-            # Create result object
-            result = {
-                "url": url,
-                "text": text_content,
-                "source": url,
-                "title": soup.title.string if soup.title else "No title",
-                "status": "success",
-            }
+            crawl_result = asyncio.run(crawl())
 
-            logger.info(f"Successfully scraped: {url}")
+            # Extract content from result
+            if crawl_result.success:
+                text_content = crawl_result.extracted_content.get("text", "")
+                title = crawl_result.extracted_content.get("title", "No title")
+
+                result = {
+                    "url": url,
+                    "text": text_content,
+                    "source": url,
+                    "title": title,
+                    "status": "success",
+                    "metadata": {
+                        "extraction_method": "crawl4ai",
+                        "crawl_status": "success",
+                    },
+                }
+            else:
+                result = {
+                    "url": url,
+                    "text": f"Failed to scrape content from {url}",
+                    "source": url,
+                    "title": "Error",
+                    "status": "error",
+                    "error": crawl_result.error_message or "Unknown error",
+                }
+
+            logger.info(f"Successfully scraped with crawl4ai: {url}")
             return result
 
         except requests.exceptions.RequestException as e:
@@ -129,3 +154,10 @@ def scrape_web(urls: List[str]) -> List[Dict[str, Any]]:
     """
     scraper = WebScraper()
     return scraper.scrape_urls(urls)
+
+
+def scrape_urls(urls: List[str]) -> List[Dict[str, Any]]:
+    """
+    Alias for scrape_web for backward compatibility.
+    """
+    return scrape_web(urls)

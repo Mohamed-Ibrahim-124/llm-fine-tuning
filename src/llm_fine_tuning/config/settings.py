@@ -28,6 +28,13 @@ class DataConfig:
     processed_path: str
     training_path: str
     evaluation_path: str
+    # Add new configuration options
+    use_real_pdf_extraction: bool = True
+    use_real_web_scraping: bool = True
+    pdf_extraction_method: str = (
+        "docling"  # "docling", "pypdf2", "pdfplumber", "easyocr"
+    )
+    web_scraping_method: str = "crawl4ai"  # "crawl4ai", "requests", "selenium"
 
 
 @dataclass
@@ -98,6 +105,9 @@ def _setup_environment():
     os.environ.setdefault("API_TOKEN", "your-secret-token")
     os.environ.setdefault("API_HOST", "0.0.0.0")
     os.environ.setdefault("API_PORT", "8000")
+
+    # External API Keys
+    os.environ.setdefault("OPENAI_API_KEY", "your-openai-api-key")
 
     # Training Configuration
     os.environ.setdefault("BATCH_SIZE", "1")

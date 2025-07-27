@@ -41,6 +41,9 @@ tensorboard
 # API testing
 httpx
 fastapi[all]
+
+# External APIs
+openai
 # Data validation
 great-expectations
 # Model optimization

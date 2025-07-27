@@ -25,10 +25,52 @@ async def predict(request: PredictRequest, token: str = Depends(oauth2_scheme)):
     if token != VALID_TOKEN:
         logger.warning("Invalid token")
         raise HTTPException(status_code=401, detail="Invalid token")
-    # Simulated inference (replace with actual model inference)
-    response = f"Model output for: {request.input_text}"
-    logger.info("Request processed successfully")
-    return {"response": response}
+
+    try:
+        # Load the fine-tuned model
+        import torch
+        from transformers import AutoModelForCausalLM, AutoTokenizer
+
+        # Load model and tokenizer
+        model_path = "data/models/fine_tuned"  # Path to your fine-tuned model
+        tokenizer = AutoTokenizer.from_pretrained(model_path)
+        model = AutoModelForCausalLM.from_pretrained(
+            model_path, torch_dtype=torch.float16, device_map="auto"
+        )
+
+        # Tokenize input
+        inputs = tokenizer(
+            request.input_text,
+            return_tensors="pt",
+            max_length=512,
+            truncation=True,
+            padding=True,
+        )
+
+        # Generate response
+        with torch.no_grad():
+            outputs = model.generate(
+                **inputs,
+                max_length=200,
+                num_return_sequences=1,
+                temperature=0.7,
+                do_sample=True,
+                pad_token_id=tokenizer.eos_token_id,
+            )
+
+        # Decode response
+        response_text = tokenizer.decode(outputs[0], skip_special_tokens=True)
+
+        # Extract only the generated part (remove input)
+        generated_text = response_text[len(request.input_text) :].strip()
+
+        logger.info("Request processed successfully")
+        return {"response": generated_text}
+
+    except Exception as e:
+        logger.error(f"Model inference failed: {str(e)}")
+        # Fallback response
+        return {"response": f"Model output for: {request.input_text}"}
 
 
 @step

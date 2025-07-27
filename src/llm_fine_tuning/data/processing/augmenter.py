@@ -34,29 +34,92 @@ class DataAugmenter:
             "classification": "Classify this EV charging information into categories: {text}",
         }
 
-    def generate_qa_pair(self, text: str) -> Dict[str, str]:
-        """
-        Generate a question-answer pair from text.
+        def generate_qa_pair(self, text: str) -> Dict[str, str]:
+            """
+            Generate a question-answer pair from text using LLM API.
 
-        Args:
-            text: Input text to generate Q&A from
+            Args:
+                text: Input text to generate Q&A from
 
-        Returns:
-            Dictionary containing question and answer
-        """
-        # Simple rule-based augmentation
-        # In a real implementation, you would use an LLM API here
+            Returns:
+                Dictionary containing question and answer
+            """
 
-        # Split text into sentences
-        sentences = text.split(".")
-        if not sentences or len(sentences[0].strip()) < 10:
-            return {"question": "What is this text about?", "answer": text}
+        try:
+            # Use OpenAI API for Q&A generation
+            # Configure OpenAI client
+            import os
 
-        # Use first sentence to generate a question
-        first_sentence = sentences[0].strip()
-        question = f"What is {first_sentence.lower()}?"
+            import openai
 
-        return {"question": question, "answer": text}
+            api_key = os.getenv("OPENAI_API_KEY", "your-openai-api-key")
+            client = openai.OpenAI(api_key=api_key)
+
+            # Create prompt for Q&A generation
+            prompt = f"""
+            Based on the following text about electric vehicle charging stations, generate a relevant question and answer pair.
+            
+            Text: {text}
+            
+            Generate a question that someone might ask about this information, and provide a comprehensive answer.
+            Focus on practical information about EV charging.
+            
+            Format your response as:
+            Question: [your question]
+            Answer: [your answer]
+            """
+
+            # Call OpenAI API
+            response = client.chat.completions.create(
+                model="gpt-3.5-turbo",
+                messages=[
+                    {
+                        "role": "system",
+                        "content": "You are an expert on electric vehicle charging stations.",
+                    },
+                    {"role": "user", "content": prompt},
+                ],
+                max_tokens=300,
+                temperature=0.7,
+            )
+
+            # Parse response
+            content = response.choices[0].message.content
+
+            # Extract question and answer
+            lines = content.split("\n")
+            question = ""
+            answer = ""
+
+            for line in lines:
+                if line.startswith("Question:"):
+                    question = line.replace("Question:", "").strip()
+                elif line.startswith("Answer:"):
+                    answer = line.replace("Answer:", "").strip()
+
+            # Fallback if parsing fails
+            if not question or not answer:
+                question = (
+                    "What information is provided about EV charging in this text?"
+                )
+                answer = text
+
+            return {"question": question, "answer": answer}
+
+        except Exception as e:
+            logger.warning(
+                f"Failed to generate Q&A with LLM API: {str(e)}. Using fallback method."
+            )
+
+            # Fallback to simple rule-based generation
+            sentences = text.split(".")
+            if not sentences or len(sentences[0].strip()) < 10:
+                return {"question": "What is this text about?", "answer": text}
+
+            first_sentence = sentences[0].strip()
+            question = f"What is {first_sentence.lower()}?"
+
+            return {"question": question, "answer": text}
 
     def augment_data(self, df, output_path: str = None):
         """

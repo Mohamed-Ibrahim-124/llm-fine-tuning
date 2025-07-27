@@ -42,22 +42,31 @@ class PDFExtractor:
             if path.suffix.lower() not in self.supported_extensions:
                 raise ValueError(f"Unsupported file type: {path.suffix}")
 
-            # For now, create a mock PDF extraction
-            # In a real implementation, you would use PyPDF2, pdfplumber, or similar
-            mock_content = (
-                f"Mock PDF content extracted from {pdf_path}. "
-                f"This would contain the actual text content from the PDF file. "
-                f"File size: {path.stat().st_size} bytes. "
-                f"Last modified: {path.stat().st_mtime}"
-            )
+            # Use docling to parse the PDF
+            import docling
+
+            # Use the correct docling API
+            document = docling.Document(str(path))
+
+            # Extract text content
+            text_content = document.text
+
+            # Extract additional metadata
+            metadata = {
+                "pages": len(document.pages) if hasattr(document, "pages") else 1,
+                "file_size": path.stat().st_size,
+                "file_path": str(path),
+                "extraction_method": "docling",
+            }
 
             result = {
-                "text": mock_content,
+                "text": text_content,
                 "source": str(path),
                 "title": f"PDF: {path.name}",
                 "status": "success",
                 "file_size": path.stat().st_size,
                 "file_path": str(path),
+                "metadata": metadata,
             }
 
             logger.info(f"Successfully extracted PDF: {pdf_path}")

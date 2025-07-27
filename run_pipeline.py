@@ -4,7 +4,6 @@ Main script to run the complete LLM Fine-tuning Pipeline.
 """
 
 import json
-import os
 import sys
 from datetime import datetime
 from pathlib import Path
@@ -93,7 +92,6 @@ def run_data_processing(data):
             train_data, val_data = augmented_data, []
 
         return {"train": train_data, "val": val_data, "full": augmented_data}
-
     except Exception as e:
         logger.error(f"❌ Data processing failed: {str(e)}")
         raise
@@ -202,16 +200,13 @@ def run_performance_monitoring():
         logger.info(
             f"✅ System metrics: CPU={metrics.get('cpu_usage_percent', 0):.1f}%, Memory={metrics.get('memory_usage_mb', 0):.1f}MB"
         )
-
         # Record sample metrics
         monitor.record_metrics(latency_ms=150.0, throughput=8.5, system_metrics=metrics)
-
         # Get performance summary
         summary = monitor.get_performance_summary()
         logger.info(
             f"✅ Performance summary: Latency={summary.get('average_latency', 0):.1f}ms, Throughput={summary.get('average_throughput', 0):.1f} req/s"
         )
-
         # Save performance metrics
         perf_file = "logs/performance_metrics.json"
         monitor.save_metrics(perf_file)

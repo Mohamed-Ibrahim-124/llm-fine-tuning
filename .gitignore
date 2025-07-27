@@ -189,16 +189,12 @@ mlruns/
 *.json
 *.parquet
 *.feather
-*.h5
-*.hdf5
 *.npy
 *.npz
 *.pickle
-*.pkl
 
 # Logs
 logs/
-*.log
 
 # Temporary files
 *.tmp
@@ -207,13 +203,11 @@ logs/
 Thumbs.db
 
 # OS generated files
-.DS_Store
 .DS_Store?
 ._*
 .Spotlight-V100
 .Trashes
 ehthumbs.db
-Thumbs.db
 
 # Windows
 *.lnk
@@ -224,14 +218,3 @@ data/processed/
 data/training/
 data/evaluation/
 # Model files (not source code)
-*.pkl
-*.joblib
-*.h5
-*.hdf5
-*.pb
-*.onnx
-*.pt
-*.pth
-*.ckpt
-*.safetensors
-*.egg-info/

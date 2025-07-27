@@ -3,7 +3,6 @@
 Test script for the LLM Fine-tuning API.
 """
 
-import json
 import time
 
 import requests

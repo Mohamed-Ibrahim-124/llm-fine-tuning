@@ -6,7 +6,7 @@ question-answer pairs from collected text content.
 """
 
 from pathlib import Path
-from typing import Dict
+from typing import Any, Dict, List, Union
 
 import pandas as pd
 
@@ -34,17 +34,17 @@ class DataAugmenter:
             "classification": "Classify this EV charging information into categories: {text}",
         }
 
-        def generate_qa_pair(self, text: str) -> Dict[str, str]:
-            """
-            Generate a question-answer pair from text using LLM API.
+    @staticmethod
+    def generate_qa_pair(text: str) -> Dict[str, str]:
+        """
+        Generate a question-answer pair from text using LLM API.
 
-            Args:
-                text: Input text to generate Q&A from
+        Args:
+            text: Input text to generate Q&A from
 
-            Returns:
-                Dictionary containing question and answer
-            """
-
+        Returns:
+            Dictionary containing question and answer
+        """
         try:
             # Use OpenAI API for Q&A generation
             # Configure OpenAI client
@@ -70,15 +70,17 @@ class DataAugmenter:
             """
 
             # Call OpenAI API
+            messages: List[Dict[str, str]] = [
+                {
+                    "role": "system",
+                    "content": "You are an expert on electric vehicle charging stations.",
+                },
+                {"role": "user", "content": prompt},
+            ]
+
             response = client.chat.completions.create(
                 model="gpt-3.5-turbo",
-                messages=[
-                    {
-                        "role": "system",
-                        "content": "You are an expert on electric vehicle charging stations.",
-                    },
-                    {"role": "user", "content": prompt},
-                ],
+                messages=messages,  # type: ignore
                 max_tokens=300,
                 temperature=0.7,
             )
@@ -121,7 +123,9 @@ class DataAugmenter:
 
             return {"question": question, "answer": text}
 
-    def augment_data(self, df, output_path: str = None):
+    def augment_data(
+        self, df: Union[pd.DataFrame, List[Dict[str, Any]]], output_path: str = None
+    ) -> pd.DataFrame:
         """
         Augment data by generating Q&A pairs.
 
@@ -142,18 +146,20 @@ class DataAugmenter:
         initial_count = len(df)
 
         for idx, row in df.iterrows():
-            text = row["text"]
-            source = row.get("source", "unknown")
+            # Convert idx to int for arithmetic operations
+            idx_int = int(idx) if isinstance(idx, (int, float)) else 0
+            text = str(row["text"])
+            source = str(row.get("source", "unknown"))
 
             # Generate Q&A pair
-            qa_pair = self.generate_qa_pair(text)
+            qa_pair = DataAugmenter.generate_qa_pair(text)
             qa_pair["source"] = source
             qa_pair["original_text"] = text
 
             qa_pairs.append(qa_pair)
 
-            if (idx + 1) % 100 == 0:
-                logger.info(f"Processed {idx + 1}/{initial_count} records")
+            if (idx_int + 1) % 100 == 0:
+                logger.info(f"Processed {idx_int + 1}/{initial_count} records")
 
         # Create augmented DataFrame
         augmented_df = pd.DataFrame(qa_pairs)
@@ -172,12 +178,14 @@ class DataAugmenter:
         return augmented_df
 
 
-def augment_data(df: pd.DataFrame, output_path: str = None) -> pd.DataFrame:
+def augment_data(
+    df: Union[pd.DataFrame, List[Dict[str, Any]]], output_path: str = None
+) -> pd.DataFrame:
     """
     Augment data by generating Q&A pairs.
 
     Args:
-        df: DataFrame containing cleaned text data
+        df: DataFrame or list containing cleaned text data
         output_path: Optional path to save augmented data
 
     Returns:

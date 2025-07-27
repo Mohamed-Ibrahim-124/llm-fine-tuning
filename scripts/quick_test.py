@@ -123,7 +123,6 @@ def main():
     print("=" * 30)
 
     tests = [test_imports, test_config, test_data_processing, test_benchmark]
-
     results = []
     for test in tests:
         try:
